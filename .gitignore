@@ -1,1 +1,22 @@
-usbstick-backups/
+# Local working files
+build/
+Datasheets/
+
+# KiCad backups and autosaves
+*-backups/
+*.bak
+*-bak
+_autosave-*
+\#auto_saved_files\#
+
+# KiCad lock files, caches and per-user view settings
+~*.lck
+*.lck
+fp-info-cache
+*.kicad_prl
+
+# Generated outputs (regenerate from the project)
+*.csv
+
+# Unused 3D model (J2 moved from Amphenol F32R to Hirose FH12)
+lorawan-airrh/3dmodels/lorawan-airrh.3dshapes/Amphenol_F32R-*.step

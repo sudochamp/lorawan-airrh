@@ -1,0 +1,59 @@
+(version 1)
+# JLCPCB 4-layer capability rules: JLC04161H-7628, 1.6 mm, 1 oz outer / 0.5 oz inner, ENIG.
+# Source: jlcpcb.com/capabilities/pcb-capabilities (checked 2026-09-23).
+# Board-setup minimums in the .kicad_pro hold the absolute JLC limits; the net classes hold
+# the working widths used for routing. These rules cover what board setup cannot express.
+#
+# Via annular ring (0.05 mm) is enforced by board setup (min_via_annular_width); a second
+# "A.Type == 'Via'" rule here would share a condition with the drill rule below and override it.
+
+(rule "JLC: no blind, buried or micro vias on standard 4-layer"
+	(constraint disallow buried_via micro_via blind_via))
+
+(rule "JLC: via drill below 0.20 mm is an extra-cost option"
+	(severity warning)
+	(condition "A.Type == 'Via'")
+	(constraint hole_size (min 0.2mm)))
+
+(rule "JLC: PTH annular ring >= 0.15 mm"
+	(condition "A.Type == 'Pad' && A.Pad_Type == 'Through-hole'")
+	(constraint annular_width (min 0.15mm)))
+
+(rule "JLC: PTH hole-to-hole >= 0.45 mm"
+	(condition "A.Pad_Type == 'Through-hole' && B.Pad_Type == 'Through-hole'")
+	(constraint hole_to_hole (min 0.45mm)))
+
+(rule "JLC: PTH hole to copper >= 0.28 mm"
+	(condition "A.Pad_Type == 'Through-hole' && A.Net != B.Net")
+	(constraint hole_clearance (min 0.28mm)))
+
+(rule "JLC: NPTH hole to copper >= 0.20 mm"
+	(condition "A.Pad_Type == 'NPTH, mechanical'")
+	(constraint hole_clearance (min 0.2mm)))
+
+# --- Design intent (tighter than JLC) ---
+
+(rule "RF: 50 ohm CPWG, 0.371 mm over In1.Cu GND with 0.20 mm gap"
+	(condition "A.NetClass == 'RF'")
+	(constraint track_width (min 0.35mm) (opt 0.371mm) (max 0.39mm))
+	(constraint clearance (min 0.2mm)))
+
+(rule "RF: no vias in the RF feed"
+	(condition "A.Type == 'Via' && A.NetClass == 'RF'")
+	(constraint disallow via))
+
+(rule "Display pump rails (+/-20 V): keep 0.20 mm from other nets"
+	(condition "A.NetClass == 'Display_HV' && A.Net != B.Net")
+	(constraint clearance (min 0.2mm)))
+
+(rule "Mounting holes: 0.50 mm copper keep-back for screw heads"
+	(condition "A.Pad_Type == 'NPTH, mechanical' && A.memberOfFootprint('H*')")
+	(constraint hole_clearance (min 0.5mm)))
+
+# --- Neck-down at fine-pitch parts ---
+# Power (0.4) and Battery (0.6) tracks cannot reach 0.4 mm pads (SHT45, OPT3004, nPM2100, ...).
+# Inside an IC's courtyard, allow them to drop to 0.2 mm. The router takes this width when a
+# route is started from the IC pad; add track-to-track teardrops to taper the width change.
+(rule "Power/Battery neck-down inside IC courtyards"
+	(condition "(A.NetClass == 'Power' || A.NetClass == 'Battery') && A.intersectsCourtyard('U*')")
+	(constraint track_width (min 0.15mm) (opt 0.2mm)))
